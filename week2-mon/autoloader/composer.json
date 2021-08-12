@@ -1,0 +1,12 @@
+{
+    "name": "joefazee/autoloader",
+    "authors": [
+        {
+            "name": "Abah Joseph",
+            "email": "joefazee@gmail.com"
+        }
+    ],
+    "require": {
+        "nesbot/carbon": "^2.51"
+    }
+}

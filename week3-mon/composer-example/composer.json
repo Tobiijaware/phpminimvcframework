@@ -1,0 +1,20 @@
+{
+    "name": "joefazee/composer-example",
+    "authors": [
+        {
+            "name": "Abah Joseph",
+            "email": "joefazee@gmail.com"
+        }
+    ],
+    "require": {
+        "guzzlehttp/guzzle": "^7.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "App"
+        },
+        "files": [
+            "Support/functions.php"
+        ]
+    }
+}
