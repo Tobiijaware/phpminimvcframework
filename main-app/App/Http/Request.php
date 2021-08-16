@@ -8,4 +8,11 @@ namespace App\Http;
  */
 class Request {
 
+	public function mapParams(array $params) {
+
+		foreach($params as $p) {
+
+			$this->{$p['variable']} = $p['data'];
+		}
+	}
 }
