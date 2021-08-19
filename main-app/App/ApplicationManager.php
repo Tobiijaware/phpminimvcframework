@@ -1,6 +1,7 @@
 <?php
 namespace App;
 
+use App\Exceptions\InvalidHandlerException;
 use App\Http\Request;
 use App\Http\Response;
 
@@ -84,17 +85,24 @@ class ApplicationManager {
 		if(!$route) throw new \Exception('404 Not found');
 		$callback = $route['callback'];
 
+		for($i=0; $i < count($route['variables']); $i++) {
+			$route['variables'][$i]['data'] = $routeMatches[$route['variables'][$i]['index']];
+		}
+		$req = new Request();
+		$req->mapParams($route['variables']);
+		$res = new Response();
+
 		if($this->isClosure($callback)) {
+			return call_user_func( $callback, $req, $res );
+		} if(is_array($callback) && count($callback) >= 1) {
+			$controller = $callback[0];
+			$action = isset($callback[1]) ? trim($callback[1]) : 'index';
 
-			for($i=0; $i < count($route['variables']); $i++) {
-				$route['variables'][$i]['data'] = $routeMatches[$route['variables'][$i]['index']];
-			}
-			$req = new Request();
-			$req->mapParams($route['variables']);
-
-			call_user_func( $callback, $req, new Response() );
+			$instance = new $controller();
+			return call_user_func_array([$instance, $action], [$req, $res]);
 		}
 
+		throw new InvalidHandlerException("Your call is not valid "  . $callback);
 	}
 
 	public function isClosure($t) : bool{
@@ -115,7 +123,7 @@ class ApplicationManager {
 		foreach($urlParts as $urlPart) {
 			$placeholder = $this->getPlaceHolder($urlPart);
 			if($placeholder) {
-				$urlPart = ['regex' => '(\w+)', 'placeholder' => $placeholder, 'path' => null, 'index' => $index];
+				$urlPart = ['regex' => '([\w+-\@]+)', 'placeholder' => $placeholder, 'path' => null, 'index' => $index];
 			} else {
 				$urlPart = ['regex' => '(' . $urlPart . ')', 'path' => $urlPart, 'placeholder' => null, 'index' => $index];
 			}
@@ -146,10 +154,6 @@ class ApplicationManager {
 		}
 
 		return false;
-	}
-
-	public function group(array $config, callable $callback) {
-
 	}
 
 }

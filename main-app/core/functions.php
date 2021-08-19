@@ -12,3 +12,8 @@ function render(string $templatePath, array $data = [], $render = true): ?string
 
 	return $content;
 }
+
+
+function include_template($path) {
+	require_once( APP_PATH . '/templates/' .  $path);
+}

@@ -4,19 +4,14 @@ namespace App\Controllers;
 
 /**
  * Class HomeController
- * /home/about
- * @package \App\Controllers
+ *
+ * @package App\Controllers
  */
-class HomeController extends BaseController {
+class HomeController  extends BaseController{
 
-	public function index() {
+	public function index($req, $res) {
 
-		$this->session->store('data', 'value');
-
-
+		$res->render('home');
 	}
 
-	public function about() {
-		render('home/about', ['contactAddress' => 'ss']);
-	}
 }
