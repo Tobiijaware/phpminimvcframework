@@ -31,4 +31,10 @@ class Response {
 
 		return $content;
 	}
+
+
+	public function redirect($to) {
+		header('Location: ' . $to);
+		exit;
+	}
 }

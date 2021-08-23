@@ -1,22 +1,20 @@
 <?php
 namespace App;
 
-use App\Exceptions\InvalidHandlerException;
-use App\Http\Request;
-use App\Http\Response;
+use App\Contracts\IRouterInterface;
 
 /**
  * Class ApplicationManager
  *
  * @package \\${NAMESPACE}
  */
-class ApplicationManager {
+class Route implements IRouterInterface {
 
-	private static $instance;
+	private static  $instance;
 
-	private  $routes;
+	private   $routes;
 
-	private $currentPath;
+	private  $currentPath;
 
 	private const  METHOD_POST = 'POST';
 	private const  METHOD_GET = 'GET';
@@ -35,7 +33,7 @@ class ApplicationManager {
 	private function __construct() {
 	}
 
-	public static function getInstance() : ApplicationManager {
+	public static function getInstance() : self {
 		if(!static::$instance) static::$instance = new self();
 		return static::$instance;
 	}
@@ -48,7 +46,12 @@ class ApplicationManager {
 		$routeInfo = $this->generateRouteRegex($path);
 
 		if(!isset($this->routes[$method][$routeInfo['regex']])) {
-			$this->routes[$method][$routeInfo['regex']] = ['path' => $routeInfo['regex'], 'method' => $method, 'callback' => $callback, 'variables' => $routeInfo['variables']];
+			$this->routes[$method][$routeInfo['regex']] = [
+				'path' => $routeInfo['regex'],
+				'method' => $method,
+				'callback' => $callback,
+				'variables' => $routeInfo['variables']
+			];
 		}
 
 	}
@@ -61,8 +64,7 @@ class ApplicationManager {
 		}
 	}
 
-
-	public function mount() {
+	public function getCurrentPath() :  string  {
 
 		$this->currentPath = isset($_SERVER['PATH_INFO']) ?  rtrim($_SERVER['PATH_INFO']) : '/';
 
@@ -70,53 +72,11 @@ class ApplicationManager {
 			$this->currentPath = substr($this->currentPath, 0, strlen($this->currentPath) - 1);
 		}
 
-		$routes = $this->routes[$_SERVER['REQUEST_METHOD']] ?? [];
-		$route = null;
-		$routeMatches = null;
-
-		foreach($routes as $regex=>$r) {
-			preg_match( '@' . $regex . '$@', $this->currentPath, $matches);
-			if($matches) {
-				$route = $r;
-				$routeMatches = $matches;
-			}
-		}
-
-		if(!$route) throw new \Exception('404 Not found');
-		$callback = $route['callback'];
-
-		for($i=0; $i < count($route['variables']); $i++) {
-			$route['variables'][$i]['data'] = $routeMatches[$route['variables'][$i]['index']];
-		}
-		$req = new Request();
-		$req->mapParams($route['variables']);
-		$res = new Response();
-
-		if($this->isClosure($callback)) {
-			return call_user_func( $callback, $req, $res );
-		} if(is_array($callback) && count($callback) >= 1) {
-			$controller = $callback[0];
-			$action = isset($callback[1]) ? trim($callback[1]) : 'index';
-
-			$instance = new $controller();
-			return call_user_func_array([$instance, $action], [$req, $res]);
-		}
-
-		throw new InvalidHandlerException("Your call is not valid "  . $callback);
+		return $this->currentPath;
 	}
 
-	public function isClosure($t) : bool{
-		return $t instanceof \Closure;
-	}
-
-	public function dumpRoutes() {
-		echo "<pre>";
-		print_r($this->routes);
-		echo "</pre>";
-	}
-
-	public function generateRouteRegex($str) {
-		$url = ltrim(rtrim($str, '/'), '/');
+	private function generateRouteRegex($str) {
+		$url = ltrim(rtrim( $str, '/'), '/');
 		$urlParts = explode('/', $url);
 		$routeRegx = [];
 		$index  = 0;
@@ -154,6 +114,14 @@ class ApplicationManager {
 		}
 
 		return false;
+	}
+
+	public function getMethodRoutes( $method ) : array {
+		return  isset($this->routes[$method]) ? $this->routes[$method] : [];
+	}
+
+	public function routes() : array {
+		return $this->routes;
 	}
 
 }

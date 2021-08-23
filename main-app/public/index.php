@@ -1,11 +1,15 @@
 <?php
-use App\ApplicationManager;
+use \App\Application;
+use \App\Route;
+use \App\Http\Request;
+use \App\Http\Response;
 
 require_once '../constants.php';
 
 require_once '../vendor/autoload.php';
 
-$app = ApplicationManager::getInstance();
+$router =  Route::getInstance();
+$app = Application::getInstance($router, new Request(), new Response());
 
 require_once '../routes.php';
 
